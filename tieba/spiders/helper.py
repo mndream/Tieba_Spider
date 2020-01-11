@@ -14,14 +14,14 @@ def is_ad(s): #判断楼层是否为广告
 def parse_content(content):
     if not content or not content.strip():
         return None
-    content = content.replace('\r', '\n') #古老的帖子会出现奇怪的\r
+    content = content.replace('\r', '\n') # 古老的帖子会出现奇怪的\r
     s = BeautifulSoup(content, 'lxml')
     if s.html:
         s=s.html
     if s.body:
         s=s.body
     if s.div:
-        s = s.div  #post 外层有个div
+        s = s.div  # post 外层有个div
     if s.p:
         s = s.p
     l = list(s.children)
@@ -37,16 +37,16 @@ def parse_content(content):
                 break
     return strip_blank(''.join(l))
 
-def strip_blank(s): #按个人喜好去掉空白字符
+def strip_blank(s): # 按个人喜好去掉空白字符
     s = re.sub(r'\n[ \t]+\n', '\n', s)
-    s = re.sub(r'  +', ' ', s) #去掉多余的空格
-    s = re.sub(r'\n\n\n+', '\n\n', s) #去掉过多的连续换行
+    s = re.sub(r'  +', ' ', s) # 去掉多余的空格
+    s = re.sub(r'\n\n\n+', '\n\n', s) # 去掉过多的连续换行
     return s.strip()
 
 def is_str(s): 
     if s.name: 
         return False
-    #NavigableString类型需要手动转换下
+    # NavigableString类型需要手动转换下
     return str(s)
 
 def is_br(s):
@@ -68,8 +68,8 @@ def is_video(s):
         return ' ' + getJumpUrl(url) + ' '
     return False
 
-#bs带的get_text功能，很好很强大
-#粗体红字之类的都一句话搞定了
+# bs带的get_text功能，很好很强大
+# 粗体红字之类的都一句话搞定了
 def other_case(s): 
     return s.get_text()
 

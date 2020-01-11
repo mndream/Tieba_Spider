@@ -8,12 +8,17 @@ import time
 
 class TiebaSpider(scrapy.Spider):
     name = "tieba"
-    cur_page = 1    #modified by pipelines (open_spider)
-    end_page = 9999
+    cur_page = 1    # modified by pipelines (open_spider)
+    end_page = 1
     filter = None
     see_lz = False
-    
-    def parse(self, response): #forum parser
+
+    def parse(self, response): # forum parser
+        """
+        解析帖子
+        :param response:
+        :return:
+        """
         for sel in response.xpath('//li[contains(@class, "j_thread_list")]'):
             data = json.loads(sel.xpath('@data-field').extract_first())
             item = ThreadItem()
@@ -23,15 +28,14 @@ class TiebaSpider(scrapy.Spider):
             item['good'] = data['is_good']
             if not item['good']:
                 item['good'] = False
-            from scrapy.shell import inspect_response
+            item['url'] = url = 'http://tieba.baidu.com/p/%d' % data['id']
             item['title'] = sel.xpath('.//div[contains(@class, "threadlist_title")]/a/@title').extract_first()
             if self.filter and not self.filter(item["id"], item["title"], item['author'], item['reply_num'], item['good']):
+                # filter过滤掉的帖子及其回复均不存入数据库
                 continue
-            #filter过滤掉的帖子及其回复均不存入数据库
                 
             yield item
             meta = {'thread_id': data['id'], 'page': 1}
-            url = 'http://tieba.baidu.com/p/%d' % data['id']
             if self.see_lz:
                 url += '?see_lz=1'
             yield scrapy.Request(url, callback = self.parse_post,  meta = meta)
@@ -40,7 +44,7 @@ class TiebaSpider(scrapy.Spider):
         if next_page:
             if self.cur_page <= self.end_page:
                 yield self.make_requests_from_url('http:'+next_page.extract_first())
-            
+
     def parse_post(self, response): 
         meta = response.meta
         has_comment = False
@@ -54,15 +58,15 @@ class TiebaSpider(scrapy.Spider):
                 if item['comment_num'] > 0:
                     has_comment = True
                 content = floor.xpath(".//div[contains(@class,'j_d_post_content')]").extract_first()
-                #以前的帖子, data-field里面没有content
+                # 以前的帖子, data-field里面没有content
                 item['content'] = helper.parse_content(content)
-                #以前的帖子, data-field里面没有thread_id
+                # 以前的帖子, data-field里面没有thread_id
                 item['thread_id'] = meta['thread_id']
                 item['floor'] = data['content']['post_no']
-                #只有以前的帖子, data-field里面才有date
+                # 只有以前的帖子, data-field里面才有date
                 if 'date' in data['content'].keys():
                     item['time'] = data['content']['date']
-                    #只有以前的帖子, data-field里面才有date
+                    # 只有以前的帖子, data-field里面才有date
                 else:
                     item['time'] = floor.xpath(".//span[@class='tail-info']")\
                     .re_first(r'[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}')
@@ -90,4 +94,3 @@ class TiebaSpider(scrapy.Spider):
                 item['content'] = helper.parse_content(comment['content'])
                 item['time'] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(comment['now_time']))
                 yield item
-         
