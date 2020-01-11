@@ -8,6 +8,8 @@
  - 有些帖子目前概率性爬不到，我也没能找到原因，可以考虑多爬几次。
  - 根据[issue 9](https://github.com/Aqua-Dream/Tieba_Spider/issues/9)，**只会爬取楼中楼的第一页(目前为前10条回复)**。暂无修正计划。
 
+2020.01.11更新：使用pymysql包连接数据库，支持Python版本更高（3.5+）。
+
 2018.6.13更新：新增支持python 3。请卸载原来的python库`mysql-python`，改为使用`mysqlclient`。
 
 2017.3.23更新：修改了页选项参数形式，增加了只看楼主、只爬精品和自定义过滤帖子功能。
@@ -73,7 +75,7 @@ scrapy run 仙剑五外传 -gs -p 5 12 -f thread_filter
 |author   |VARCHAR(30) |                                                        |
 |reply_num|INT(4)      |回复数量(含楼中楼, 不含1楼)                             |
 |good     |BOOL        |是否为精品帖                                            |
-
+|url      |VARCHAR(255)       |帖子的url链接地址                                 |
 
  - post
 
